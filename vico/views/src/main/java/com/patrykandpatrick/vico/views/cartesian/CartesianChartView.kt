@@ -87,7 +87,7 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
       scrollEnabled = false,
       zoomEnabled = false,
       layerPadding = CartesianLayerPadding(),
-      pointerPosition = null,
+      pointerPositions = emptyList(),
     )
 
   private val scaleGestureListener: ScaleGestureDetector.OnScaleGestureListener =
@@ -303,12 +303,12 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
     scrollHandler.scroll(
       zoomHandler.zoom(zoomChange, focusX, scrollHandler.value, chart.layerBounds)
     )
-    handleTouchEvent(null)
+    handleTouchEvent(emptyList())
     invalidate()
   }
 
-  private fun handleTouchEvent(point: Point?) {
-    measuringContext.pointerPosition = point
+  private fun handleTouchEvent(points: List<Point>) {
+    measuringContext.pointerPositions = points
   }
 
   override fun dispatchDraw(canvas: Canvas) {

@@ -41,5 +41,5 @@ public interface CartesianMeasuringContext : MeasuringContext {
   public val layerPadding: CartesianLayerPadding
 
   /** The pointer position. */
-  public val pointerPosition: Point?
+  public val pointerPositions: List<Point>
 }

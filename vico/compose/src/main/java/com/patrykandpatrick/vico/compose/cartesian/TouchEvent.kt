@@ -21,12 +21,13 @@ import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.PointerId
 import androidx.compose.ui.input.pointer.pointerInput
 import com.patrykandpatrick.vico.compose.common.detectZoomGestures
 import com.patrykandpatrick.vico.core.common.Point
 
 internal fun Modifier.chartTouchEvent(
-  setTouchPoint: ((Point?) -> Unit)?,
+  setTouchPoint: ((List<Point>) -> Unit)?,
   isScrollEnabled: Boolean,
   scrollState: VicoScrollState,
   onZoom: ((Float, Offset) -> Unit)?,
@@ -43,12 +44,19 @@ internal fun Modifier.chartTouchEvent(
           awaitPointerEventScope {
             while (true) {
               val event = awaitPointerEvent()
+              val points = mutableMapOf<PointerId, Point>()
               when (event.type) {
-                PointerEventType.Press -> setTouchPoint(event.changes.first().position.point)
-                PointerEventType.Release -> setTouchPoint(null)
+                PointerEventType.Press -> {
+                  event.changes.forEach { changes -> points[changes.id] = changes.position.point }
+                }
+
+                PointerEventType.Release -> points.remove(event.changes.first().id)
                 PointerEventType.Move ->
-                  if (!isScrollEnabled) setTouchPoint(event.changes.first().position.point)
+                  if (!isScrollEnabled) {
+                    event.changes.forEach { changes -> points[changes.id] = changes.position.point }
+                  }
               }
+              setTouchPoint(points.values.toList())
             }
           }
         }
@@ -60,7 +68,7 @@ internal fun Modifier.chartTouchEvent(
       if (isScrollEnabled && onZoom != null) {
         pointerInput(setTouchPoint, onZoom) {
           detectZoomGestures { centroid, zoom ->
-            setTouchPoint?.invoke(null)
+            setTouchPoint?.invoke(emptyList())
             onZoom(zoom, centroid)
           }
         }

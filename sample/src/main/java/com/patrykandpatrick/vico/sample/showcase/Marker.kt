@@ -48,6 +48,7 @@ internal fun rememberMarker(
   valueFormatter: DefaultCartesianMarker.ValueFormatter =
     DefaultCartesianMarker.ValueFormatter.default(),
   showIndicator: Boolean = true,
+  maxPointers: Int = 1,
 ): CartesianMarker {
   val labelBackgroundShape = markerCorneredShape(CorneredShape.Corner.Rounded)
   val labelBackground =
@@ -111,6 +112,7 @@ internal fun rememberMarker(
           },
         indicatorSizeDp = 36f,
         guideline = guideline,
+        maxPointers = maxPointers,
       ) {
       override fun updateLayerMargins(
         context: CartesianMeasuringContext,

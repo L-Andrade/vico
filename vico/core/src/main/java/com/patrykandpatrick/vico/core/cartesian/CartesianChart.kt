@@ -281,7 +281,7 @@ public open class CartesianChart(
         model.forEachWithLayer(drawingConsumer.apply { this.context = context })
       }
       forEachPersistentMarker { marker, targets -> marker.drawUnderLayers(context, targets) }
-      val markerTargets = getMarkerTargets(context, pointerPosition)
+      val markerTargets = getMarkerTargets(context, pointerPositions)
       if (markerTargets.isNotEmpty()) marker?.drawUnderLayers(context, markerTargets)
       canvas.drawBitmap(layerBitmap, 0f, 0f, null)
       fadingEdges?.run {
@@ -367,40 +367,43 @@ public open class CartesianChart(
   }
 
   private inline fun forEachPersistentMarker(
-    block: (CartesianMarker, List<CartesianMarker.Target>) -> Unit
+    block: (CartesianMarker, List<List<CartesianMarker.Target>>) -> Unit
   ) {
     persistentMarkerMap.forEach { (x, marker) ->
-      markerTargets[x]?.also { targets -> block(marker, targets) }
+      markerTargets[x]?.also { targets -> block(marker, listOf(targets)) }
     }
   }
 
   protected open fun getMarkerTargets(
     context: CartesianDrawingContext,
-    pointerPosition: Point?,
-  ): List<CartesianMarker.Target> {
+    pointerPositions: List<Point>,
+  ): List<List<CartesianMarker.Target>> {
     val marker = marker ?: return emptyList()
-    if (pointerPosition == null || markerTargets.isEmpty()) {
+    if (pointerPositions.isEmpty() || markerTargets.isEmpty()) {
       if (previousMarkerTargetHashCode != null) markerVisibilityListener?.onHidden(marker)
       previousMarkerTargetHashCode = null
       return emptyList()
     }
     var targets = emptyList<CartesianMarker.Target>()
-    var previousDistance = Float.POSITIVE_INFINITY
-    for (xTargets in markerTargets.values) {
-      val (distance, canvasXTargets) =
-        xTargets.groupBy { abs(pointerPosition.x - it.canvasX) }.minBy { it.key }
-      if (distance > previousDistance) break
-      targets = canvasXTargets
-      previousDistance = distance
+    val allTargets = pointerPositions.map { pointerPosition ->
+      var previousDistance = Float.POSITIVE_INFINITY
+      for (xTargets in markerTargets.values) {
+        val (distance, canvasXTargets) =
+          xTargets.groupBy { abs(pointerPosition.x - it.canvasX) }.minBy { it.key }
+        if (distance > previousDistance) break
+        targets = canvasXTargets
+        previousDistance = distance
+      }
+      targets
     }
     val targetHashCode = targets.hashCode()
     if (previousMarkerTargetHashCode == null) {
-      markerVisibilityListener?.onShown(marker, targets)
+      markerVisibilityListener?.onShown(marker, allTargets)
     } else if (targetHashCode != previousMarkerTargetHashCode) {
-      markerVisibilityListener?.onUpdated(marker, targets)
+      markerVisibilityListener?.onUpdated(marker, allTargets)
     }
     previousMarkerTargetHashCode = targetHashCode
-    return targets
+    return allTargets
   }
 
   protected inline fun <reified T : CartesianLayerModel> MutableList<CartesianLayerModel>.consume(

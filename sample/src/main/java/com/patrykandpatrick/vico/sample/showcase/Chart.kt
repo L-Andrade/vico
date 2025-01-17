@@ -24,6 +24,7 @@ import com.patrykandpatrick.vico.sample.showcase.charts.BasicLineChart
 import com.patrykandpatrick.vico.sample.showcase.charts.DailyDigitalMediaUse
 import com.patrykandpatrick.vico.sample.showcase.charts.ElectricCarSales
 import com.patrykandpatrick.vico.sample.showcase.charts.GoldPrices
+import com.patrykandpatrick.vico.sample.showcase.charts.MultiPointerLineChart
 import com.patrykandpatrick.vico.sample.showcase.charts.RockMetalRatios
 import com.patrykandpatrick.vico.sample.showcase.charts.TemperatureAnomalies
 
@@ -39,9 +40,13 @@ internal val charts =
       BasicColumnChart(uiFramework, modifier)
     },
     Chart("Basic line chart") { uiFramework, modifier -> BasicLineChart(uiFramework, modifier) },
+    Chart("Multi pointer line chart") { uiFramework, modifier ->
+      MultiPointerLineChart(uiFramework, modifier)
+    },
     Chart("AI test scores", "Kiela et al. 2023. Processing by Our World in\u00A0Data.") {
-      uiFramework,
-      modifier ->
+        uiFramework,
+        modifier,
+      ->
       AITestScores(uiFramework, modifier)
     },
     Chart(

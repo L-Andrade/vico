@@ -31,7 +31,7 @@ internal class MotionEventHandler(
   private val scroller: OverScroller,
   density: Float,
   var scrollEnabled: Boolean = false,
-  private val onTouchPoint: (Point?) -> Unit,
+  private val onTouchPoint: (List<Point>) -> Unit,
   private val requestInvalidate: () -> Unit,
 ) {
   private val velocityUnits = (VELOCITY_PIXELS * density).toInt()
@@ -42,6 +42,7 @@ internal class MotionEventHandler(
   private var velocityTracker = VelocityTrackerHelper()
   private var lastEventPointerCount = 0
   private var totalDragAmount: Float = 0f
+  private val points = mutableMapOf<Int, Point>()
 
   fun handleMotionEvent(motionEvent: MotionEvent, scrollHandler: ScrollHandler): Boolean {
     val ignoreEvent =
@@ -50,17 +51,32 @@ internal class MotionEventHandler(
 
     return when (motionEvent.action and MotionEvent.ACTION_MASK) {
       MotionEvent.ACTION_DOWN -> {
+        val pointerId = motionEvent.getPointerId(motionEvent.actionIndex)
         scroller.abortAnimation()
         initialX = motionEvent.x
-        onTouchPoint(motionEvent.point)
+        points[pointerId] = motionEvent.point
+        onTouchPoint(points.values.toList())
         lastX = initialX
         currentX = initialX
         velocityTracker.get().addMovement(motionEvent)
         requestInvalidate()
         true
       }
+      MotionEvent.ACTION_POINTER_DOWN -> {
+        val pointerId = motionEvent.getPointerId(motionEvent.actionIndex)
+        points[pointerId] = motionEvent.point
+        onTouchPoint(points.values.toList())
+        true
+      }
+      MotionEvent.ACTION_POINTER_UP -> {
+        val pointerId = motionEvent.getPointerId(motionEvent.actionIndex)
+        points.remove(pointerId)
+        onTouchPoint(points.values.toList())
+        true
+      }
       MotionEvent.ACTION_MOVE -> {
         var scrollHandled = false
+        var pointerMoved = false
         if (scrollEnabled) {
           currentX = motionEvent.x
           totalDragAmount += abs(lastX - currentX)
@@ -68,22 +84,35 @@ internal class MotionEventHandler(
           if (shouldPerformScroll && !ignoreEvent) {
             velocityTracker.get().addMovement(motionEvent)
             scrollHandler.scroll(Scroll.Relative.pixels(lastX - currentX))
-            onTouchPoint(motionEvent.point)
+            for (i in 0 until motionEvent.pointerCount) {
+              val pointerId = motionEvent.getPointerId(i)
+              val newPoint = motionEvent.point.copy(motionEvent.getX(i), motionEvent.getY(i))
+              pointerMoved = pointerMoved || points[pointerId] != motionEvent.point
+              points[pointerId] = newPoint
+            }
+            onTouchPoint(points.values.toList())
             requestInvalidate()
             initialX = -dragThreshold
           }
           scrollHandled = shouldPerformScroll.not() || scrollHandler.canScroll(lastX - currentX)
           lastX = motionEvent.x
         } else {
-          onTouchPoint(motionEvent.point)
+          for (i in 0 until motionEvent.pointerCount) {
+            val pointerId = motionEvent.getPointerId(i)
+            val newPoint = motionEvent.point.copy(motionEvent.getX(i), motionEvent.getY(i))
+            pointerMoved = pointerMoved || points[pointerId] != motionEvent.point
+            points[pointerId] = newPoint
+          }
+          onTouchPoint(points.values.toList())
           requestInvalidate()
         }
-        scrollHandled
+        scrollHandled || pointerMoved
       }
       MotionEvent.ACTION_CANCEL,
       MotionEvent.ACTION_UP -> {
         totalDragAmount = 0f
-        onTouchPoint(null)
+        points.clear()
+        onTouchPoint(emptyList())
         velocityTracker.get().apply {
           computeCurrentVelocity(velocityUnits)
           val currentX = scrollHandler.value.toInt()

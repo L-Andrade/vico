@@ -71,6 +71,7 @@ public object Defaults {
   public const val LEGEND_ICON_LABEL_SPACING: Float = 8f
   public const val LEGEND_ICON_SIZE: Float = 8f
   public const val LEGEND_ROW_SPACING: Float = 8f
+  public const val MAX_POINTERS: Int = 1
 }
 
 /** @suppress */

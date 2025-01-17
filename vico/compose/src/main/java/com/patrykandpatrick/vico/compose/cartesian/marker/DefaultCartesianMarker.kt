@@ -35,15 +35,26 @@ public fun rememberDefaultCartesianMarker(
     DefaultCartesianMarker.ValueFormatter.default()
   },
   labelPosition: DefaultCartesianMarker.LabelPosition = DefaultCartesianMarker.LabelPosition.Top,
+  labelDrawBehavior: DefaultCartesianMarker.MultiPointerLabelDrawBehavior =
+    DefaultCartesianMarker.MultiPointerLabelDrawBehavior.All,
   indicator: ((Color) -> Component)? = null,
   indicatorSize: Dp = Defaults.MARKER_INDICATOR_SIZE.dp,
   guideline: LineComponent? = null,
 ): DefaultCartesianMarker =
-  remember(label, valueFormatter, labelPosition, indicator, indicatorSize, guideline) {
+  remember(
+    label,
+    valueFormatter,
+    labelPosition,
+    labelDrawBehavior,
+    indicator,
+    indicatorSize,
+    guideline,
+  ) {
     DefaultCartesianMarker(
       label = label,
       valueFormatter = valueFormatter,
       labelPosition = labelPosition,
+      labelDrawBehavior = labelDrawBehavior,
       indicator = if (indicator != null) ({ indicator(Color(it)) }) else null,
       indicatorSizeDp = indicatorSize.value,
       guideline = guideline,

@@ -27,10 +27,10 @@ import com.patrykandpatrick.vico.core.cartesian.layer.CartesianLayerMarginUpdate
 @Immutable
 public interface CartesianMarker : CartesianLayerMarginUpdater<CartesianChartModel> {
   /** Draws content under the [CartesianLayer]s. */
-  public fun drawUnderLayers(context: CartesianDrawingContext, targets: List<Target>) {}
+  public fun drawUnderLayers(context: CartesianDrawingContext, targets: List<List<Target>>) {}
 
   /** Draws content over the [CartesianLayer]s. */
-  public fun drawOverLayers(context: CartesianDrawingContext, targets: List<Target>) {}
+  public fun drawOverLayers(context: CartesianDrawingContext, targets: List<List<Target>>) {}
 
   /** Houses information on an object to be marked. */
   public interface Target {

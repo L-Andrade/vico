@@ -37,7 +37,7 @@ public class MutableCartesianMeasuringContext(
   override var scrollEnabled: Boolean,
   override var zoomEnabled: Boolean,
   override var layerPadding: CartesianLayerPadding,
-  override var pointerPosition: Point?,
+  override var pointerPositions: List<Point>,
   cacheStore: CacheStore = CacheStore(),
 ) :
   MutableMeasuringContext(canvasBounds, density, isLtr, spToPx, cacheStore),

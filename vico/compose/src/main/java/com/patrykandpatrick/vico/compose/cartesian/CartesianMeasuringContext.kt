@@ -39,7 +39,7 @@ internal fun rememberCartesianMeasuringContext(
   scrollEnabled: Boolean,
   zoomEnabled: Boolean,
   layerPadding: CartesianLayerPadding,
-  pointerPosition: Point?,
+  pointerPositions: List<Point>,
 ): CartesianMeasuringContext {
   val density = LocalDensity.current.density
   val isLtr = LocalLayoutDirection.current == LayoutDirection.Ltr
@@ -54,7 +54,7 @@ internal fun rememberCartesianMeasuringContext(
     scrollEnabled,
     zoomEnabled,
     layerPadding,
-    pointerPosition,
+    pointerPositions,
     cacheStore,
   ) {
     MutableCartesianMeasuringContext(
@@ -67,7 +67,7 @@ internal fun rememberCartesianMeasuringContext(
       scrollEnabled,
       zoomEnabled,
       layerPadding,
-      pointerPosition,
+      pointerPositions,
       cacheStore,
     )
   }

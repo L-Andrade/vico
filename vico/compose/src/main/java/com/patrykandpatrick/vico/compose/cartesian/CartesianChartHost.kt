@@ -136,7 +136,7 @@ internal fun CartesianChartHostImpl(
   previousModel: CartesianChartModel? = null,
 ) {
   val canvasBounds = remember { RectF() }
-  val pointerPosition = remember { mutableStateOf<Point?>(null) }
+  val pointerPositions = remember { mutableStateOf<List<Point>>(emptyList()) }
   val measuringContext =
     rememberCartesianMeasuringContext(
       canvasBounds = canvasBounds,
@@ -147,7 +147,7 @@ internal fun CartesianChartHostImpl(
       zoomEnabled = scrollState.scrollEnabled && zoomState.zoomEnabled,
       layerPadding =
         remember(chart.layerPadding, model.extraStore) { chart.layerPadding(model.extraStore) },
-      pointerPosition = pointerPosition.value,
+      pointerPositions = pointerPositions.value,
     )
 
   val coroutineScope = rememberCoroutineScope()
@@ -156,7 +156,9 @@ internal fun CartesianChartHostImpl(
 
   LaunchedEffect(scrollState.pointerXDeltas) {
     scrollState.pointerXDeltas.collect { delta ->
-      pointerPosition.value?.let { point -> pointerPosition.value = point.copy(point.x + delta) }
+      pointerPositions.value = pointerPositions.value.map { point ->
+        point.copy(point.x + delta)
+      }
     }
   }
 
@@ -168,7 +170,7 @@ internal fun CartesianChartHostImpl(
         .chartTouchEvent(
           setTouchPoint =
             remember(chart.marker == null) {
-              if (chart.marker != null) pointerPosition.component2() else null
+              if (chart.marker != null) pointerPositions.component2() else null
             },
           isScrollEnabled = scrollState.scrollEnabled,
           scrollState = scrollState,

@@ -58,6 +58,8 @@ public open class DefaultCartesianMarker(
   protected val label: TextComponent,
   protected val valueFormatter: ValueFormatter = ValueFormatter.default(),
   protected val labelPosition: LabelPosition = LabelPosition.Top,
+  protected val labelDrawBehavior: MultiPointerLabelDrawBehavior = MultiPointerLabelDrawBehavior.All,
+  protected val maxPointers: Int = Defaults.MAX_POINTERS,
   protected val indicator: ((Int) -> Component)? = null,
   protected val indicatorSizeDp: Float = Defaults.MARKER_INDICATOR_SIZE,
   protected val guideline: LineComponent? = null,
@@ -70,43 +72,53 @@ public open class DefaultCartesianMarker(
 
   override fun drawOverLayers(
     context: CartesianDrawingContext,
-    targets: List<CartesianMarker.Target>,
+    targets: List<List<CartesianMarker.Target>>,
   ) {
     with(context) {
-      drawGuideline(targets)
-      val halfIndicatorSize = indicatorSizeDp.half.pixels
+      targets.forEachIndexed { index, targets ->
+        if (index >= maxPointers) return@forEachIndexed
+        drawGuideline(targets)
+        val halfIndicatorSize = indicatorSizeDp.half.pixels
 
-      targets.forEach { target ->
-        when (target) {
-          is CandlestickCartesianLayerMarkerTarget -> {
-            drawIndicator(
-              target.canvasX,
-              target.openingCanvasY,
-              target.openingColor,
-              halfIndicatorSize,
-            )
-            drawIndicator(
-              target.canvasX,
-              target.closingCanvasY,
-              target.closingColor,
-              halfIndicatorSize,
-            )
-            drawIndicator(target.canvasX, target.lowCanvasY, target.lowColor, halfIndicatorSize)
-            drawIndicator(target.canvasX, target.highCanvasY, target.highColor, halfIndicatorSize)
-          }
-          is ColumnCartesianLayerMarkerTarget -> {
-            target.columns.forEach { column ->
-              drawIndicator(target.canvasX, column.canvasY, column.color, halfIndicatorSize)
+        targets.forEach { target ->
+          when (target) {
+            is CandlestickCartesianLayerMarkerTarget -> {
+              drawIndicator(
+                target.canvasX,
+                target.openingCanvasY,
+                target.openingColor,
+                halfIndicatorSize,
+              )
+              drawIndicator(
+                target.canvasX,
+                target.closingCanvasY,
+                target.closingColor,
+                halfIndicatorSize,
+              )
+              drawIndicator(target.canvasX, target.lowCanvasY, target.lowColor, halfIndicatorSize)
+              drawIndicator(target.canvasX, target.highCanvasY, target.highColor, halfIndicatorSize)
             }
-          }
-          is LineCartesianLayerMarkerTarget -> {
-            target.points.forEach { point ->
-              drawIndicator(target.canvasX, point.canvasY, point.color, halfIndicatorSize)
+
+            is ColumnCartesianLayerMarkerTarget -> {
+              target.columns.forEach { column ->
+                drawIndicator(target.canvasX, column.canvasY, column.color, halfIndicatorSize)
+              }
+            }
+
+            is LineCartesianLayerMarkerTarget -> {
+              target.points.forEach { point ->
+                drawIndicator(target.canvasX, point.canvasY, point.color, halfIndicatorSize)
+              }
             }
           }
         }
+        if (labelDrawBehavior == MultiPointerLabelDrawBehavior.All) {
+          drawLabel(context, targets)
+        }
       }
-      drawLabel(context, targets)
+      if (labelDrawBehavior == MultiPointerLabelDrawBehavior.Single) {
+        drawLabel(context, targets.flatten())
+      }
     }
   }
 
@@ -262,6 +274,19 @@ public open class DefaultCartesianMarker(
      * [CartesianChart].
      */
     AbovePoint,
+  }
+
+  public enum class MultiPointerLabelDrawBehavior {
+    /**
+     * Draws a label for each pointer
+     */
+    All,
+
+    /**
+     * Draws a single label centered through all pointers.
+     * Handling of the label text should be handled by the [DefaultCartesianMarker.ValueFormatter]
+     */
+    Single,
   }
 
   /** Formats [CartesianMarker] values for display. */
