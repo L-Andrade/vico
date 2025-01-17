@@ -21,7 +21,6 @@ import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.PointerId
 import androidx.compose.ui.input.pointer.pointerInput
 import com.patrykandpatrick.vico.compose.common.detectZoomGestures
 import com.patrykandpatrick.vico.core.common.Point
@@ -44,19 +43,17 @@ internal fun Modifier.chartTouchEvent(
           awaitPointerEventScope {
             while (true) {
               val event = awaitPointerEvent()
-              val points = mutableMapOf<PointerId, Point>()
-              when (event.type) {
-                PointerEventType.Press -> {
-                  event.changes.forEach { changes -> points[changes.id] = changes.position.point }
+              val points = when (event.type) {
+                PointerEventType.Press -> event.changes.map { changes -> changes.position.point }
+                PointerEventType.Release -> emptyList()
+                PointerEventType.Move -> if (!isScrollEnabled) {
+                  event.changes.map { changes -> changes.position.point }
+                } else {
+                  emptyList()
                 }
-
-                PointerEventType.Release -> points.remove(event.changes.first().id)
-                PointerEventType.Move ->
-                  if (!isScrollEnabled) {
-                    event.changes.forEach { changes -> points[changes.id] = changes.position.point }
-                  }
+                else -> emptyList()
               }
-              setTouchPoint(points.values.toList())
+              setTouchPoint(points)
             }
           }
         }
